@@ -1,0 +1,70 @@
+--(edit2) Place this LocalScript inside StarterPlayer > StarterPlayerScripts
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local camera = workspace.CurrentCamera
+local humanoid = nil
+local rootPart = nil
+
+-- Camera sway settings
+local swayAmount = 0.01
+local swaySpeed = 0.05
+
+-- Bobbing settings
+local bobAmount = 0.2
+local bobSpeed = 8
+
+-- Tilt settings (when moving sideways)
+local tiltAmount = 5 -- degrees
+local tiltSpeed = 6
+
+-- Smooth variables
+local swayX, swayY = 0, 0
+local bobTime = 0
+local tilt = 0
+
+-- Wait for character to load
+local function onCharacterAdded(char)
+	humanoid = char:WaitForChild("Humanoid")
+	rootPart = char:WaitForChild("HumanoidRootPart")
+end
+
+if player.Character then
+	onCharacterAdded(player.Character)
+end
+player.CharacterAdded:Connect(onCharacterAdded)
+
+-- Force first person
+RunService.RenderStepped:Connect(function(dt)
+	if not humanoid or not rootPart then return end
+
+	-- Lock camera to first-person
+	camera.CameraType = Enum.CameraType.Custom
+	player.CameraMode = Enum.CameraMode.LockFirstPerson
+
+	-- Mouse movement sway (small idle sway)
+	local delta = UserInputService:GetMouseDelta()
+	swayX = math.clamp(swayX + delta.X * swayAmount * dt, -1, 1)
+	swayY = math.clamp(swayY + delta.Y * swayAmount * dt, -1, 1)
+
+	-- Walking bobbing
+	if humanoid.MoveDirection.Magnitude > 0 then
+		bobTime = bobTime + dt * bobSpeed
+	else
+		bobTime = 0
+	end
+
+	local bobOffset = Vector3.new(0, math.sin(bobTime) * bobAmount, 0)
+
+	-- Sideways tilt
+	local moveDir = humanoid.MoveDirection
+	local side = rootPart.CFrame.RightVector:Dot(moveDir)
+	tilt = tilt + (side * tiltAmount - tilt) * math.min(dt * tiltSpeed, 1)
+
+	-- Apply camera CFrame offset
+	local swayCF = CFrame.Angles(math.rad(swayY), math.rad(swayX), math.rad(tilt))
+	camera.CFrame = camera.CFrame * swayCF + bobOffset
+end)
