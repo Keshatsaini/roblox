@@ -1,3 +1,4 @@
+--this was supposed to be a lua file
 --(edit2) Place this LocalScript inside StarterPlayer > StarterPlayerScripts
 
 local Players = game:GetService("Players")
