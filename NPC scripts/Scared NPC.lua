@@ -1,3 +1,4 @@
+
 --NPC will run away after catching the player in its line of sight
 
 -- NPC "Run Away" AI with Line of Sight & Random Patrol
